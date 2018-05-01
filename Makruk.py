@@ -1,5 +1,6 @@
 from __future__ import print_function
 import numpy as np
+from init import Initgame
 
 
 class movetype:
@@ -30,6 +31,7 @@ def strcmp(str1, str2):
 
 
 # white pieces are less than 8
+# global WP, WM, WC, WN, WR, WK
 WP = 1
 WM = 2
 WC = 3
@@ -38,7 +40,7 @@ WR = 5
 WK = 6
 
 # black pieces are above 8 less than 16
-
+# global BP, BM, BC, BN, BR, BK
 BP = 9
 BM = 10
 BC = 11
@@ -47,13 +49,16 @@ BR = 13
 BK = 14
 
 # EMPTY square
+# global EM
 EM = 16
 
+# global WHITE, BLACK, TRUE, FALSE
 WHITE = 0
 BLACK = 1
 TRUE = 1
 FALSE = 0
 
+# global KVAL, RVAL, NVAL, CVAL, MVAL, PVAL, DIFF
 KVAL = 0
 RVAL = 500
 NVAL = 350
@@ -103,7 +108,7 @@ history = np.zeros((2, 64, 64), dtype='int32')
 
 
 def main():
-    Initgame()
+    gameply, tomove = Initgame()
     computer = ~tomove
     while 1:
         Printboard()
