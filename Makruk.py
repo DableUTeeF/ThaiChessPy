@@ -22,8 +22,58 @@ class movetype:
             self.s = s
 
 
-MAXPLY = 600
+def strcmp(str1, str2):
+    lens = len(str1) if len(str1) < len(str2) else len(str2)
+    for i in range(lens):
+        if str1[i] != str2[i]:
+            return ord(str1) - ord(str2)
 
+
+# white pieces are less than 8
+WP = 1
+WM = 2
+WC = 3
+WN = 4
+WR = 5
+WK = 6
+
+# black pieces are above 8 less than 16
+
+BP = 9
+BM = 10
+BC = 11
+BN = 12
+BR = 13
+BK = 14
+
+# EMPTY square
+EM = 16
+
+WHITE = 0
+BLACK = 1
+TRUE = 1
+FALSE = 0
+
+KVAL = 0
+RVAL = 500
+NVAL = 350
+CVAL = 250
+MVAL = 150
+PVAL = 118
+DIFF = 60  # p 118 m 150
+
+INF = 6500
+MATE = 6000
+LOSS = 5500
+
+PROM = 1
+
+MAXPLY = 600
+RANK = lambda x: (x >> 3)
+FILE = lambda x: (x & 7)
+ABS = abs
+
+# ------------------------------------------------------- #
 board = np.zeros(64, dtype='int32')
 tomove = 0
 tree = movetype(MAXPLY)
@@ -53,7 +103,6 @@ history = np.zeros((2, 64, 64), dtype='int32')
 
 
 def main():
-    cmove = movetype(1)[0]
     Initgame()
     computer = ~tomove
     while 1:
@@ -91,6 +140,86 @@ def main():
             else:
                 print(" %d.", j)
             Showmove(tree[i])
+        print("\n Enter Number of move (n,t,c,x=New game,Takeback,Computer to move,exit) => ")
+        try:
+            enter = raw_input()  # for python2
+        except NameError:
+            enter = input()  # python >= 3
+        print("\n                ")
+        print("\n           (Program Makruk 2.0 by Phoomchai Saihom.) ")
+        print("\n                ")
+        if ~strcmp(enter, "x"):
+            break
+        if ~strcmp(enter, "c"):
+            computer = tomove
+            continue
+
+        if ~strcmp(enter, "n"):
+            Initgame()
+
+        if ~strcmp(enter, "t"):
+            if gameply > 0:
+                Unmakemove()
+                computer = ~tomove
+            continue
+
+        k = atoi(enter)
+        if (k <= 0) or (k > n):
+            continue
+
+        # Test legality after making the move
+        Makemove(tree[k - 1])
+        if Incheck(kingsquare[~tomove]):
+            Unmakemove()
+            print("Illegal move")
+            continue
+
+
+def Printboard():
+    s = "                |---|---|---|---|---|---|---|---| "
+
+    j = 8
+    for i in range(64):
+        if i % 8 == 0:
+            print("\n%s\n             %d  |", s, j)
+            j -= 1
+
+        if board[i] == EM:
+            print("   |")
+        elif board[i] == WP:
+            print("BIA|")
+        elif board[i] == WM:
+            print("MED|")
+        elif board[i] == WC:
+            print("CON|")
+        elif board[i] == WN:
+            print("MHA|")
+        elif board[i] == WR:
+            print("RUA|")
+        elif board[i] == WK:
+            print("KUN|")
+        elif board[i] == BP:
+            print("bia|")
+        elif board[i] == BM:
+            print("med|")
+        elif board[i] == BC:
+            print("con|")
+        elif board[i] == BN:
+            print("mha|")
+        elif board[i] == BR:
+            print("rua|")
+        elif board[i] == BK:
+            print("kun|")
+        else:
+            print(" %d,%d Strange piece", board[i], i)
+            exit(0)
+    print("\n%s\n                  a   b   c   d   e   f   g   h", s)
+
+
+# To show the move in string
+
+def Showmove(m):
+    print("%s%d%s%d" % (chr(ord('a') + FILE(m.f)), 8 - RANK(m.f), chr(ord('a') + FILE(m.t)), 8 - RANK(m.t)))
 
 
 if __name__ == '__main__':
