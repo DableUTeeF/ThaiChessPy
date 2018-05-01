@@ -108,6 +108,7 @@ history = np.zeros((2, 64, 64), dtype='int32')
 
 
 def main():
+    global gameply, tomove
     gameply, tomove = Initgame()
     computer = ~tomove
     while 1:
