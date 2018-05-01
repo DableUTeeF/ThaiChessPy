@@ -1,14 +1,6 @@
 from table import Inittable
 from gen import Inboard
 
-global BR, BN, BC, BM, BK, EM, BP
-global WP, WR, WN, WC, WK, WM
-global WHITE, board, blackconeattack, RANK, FILE, TRUE, FALSE
-global material, BLACK, piecevalue, positionvalue, evaltable
-global KVAL, RVAL, NVAL, CVAL, MVAL, PVAL, blackpawnattack
-global whiteconeattack, kingattack, medattack, whitepawnattack
-global knightattack, rookattack
-
 
 def Initgame():
     Initvalue()
@@ -17,11 +9,18 @@ def Initgame():
     Initattacktable()
     global gameply
     gameply = 0
-    global tomove
+    global tomove, WHITE
     tomove = WHITE
 
 
 def Initboard():
+    global BR, BN, BC, BM, BK, EM, BP
+    global WP, WR, WN, WC, WK, WM
+    global WHITE, board, blackconeattack, RANK, FILE, TRUE, FALSE
+    global material, BLACK, piecevalue, positionvalue, evaltable
+    global KVAL, RVAL, NVAL, CVAL, MVAL, PVAL, blackpawnattack
+    global whiteconeattack, kingattack, medattack, whitepawnattack
+    global knightattack, rookattack
     # Starting board
     b = [BR, BN, BC, BM, BK, BC, BN, BR,
         EM, EM, EM, EM, EM, EM, EM, EM,
@@ -53,6 +52,13 @@ def Initboard():
 
 
 def Initvalue():
+    global BR, BN, BC, BM, BK, EM, BP
+    global WP, WR, WN, WC, WK, WM
+    global WHITE, board, blackconeattack, RANK, FILE, TRUE, FALSE
+    global material, BLACK, piecevalue, positionvalue, evaltable
+    global KVAL, RVAL, NVAL, CVAL, MVAL, PVAL, blackpawnattack
+    global whiteconeattack, kingattack, medattack, whitepawnattack
+    global knightattack, rookattack
     piecevalue[WK] = KVAL
     piecevalue[WR] = RVAL
     piecevalue[WN] = NVAL
@@ -73,6 +79,13 @@ def Initvalue():
 
 
 def Initattacktable():
+    global BR, BN, BC, BM, BK, EM, BP
+    global WP, WR, WN, WC, WK, WM
+    global WHITE, board, blackconeattack, RANK, FILE, TRUE, FALSE
+    global material, BLACK, piecevalue, positionvalue, evaltable
+    global KVAL, RVAL, NVAL, CVAL, MVAL, PVAL, blackpawnattack
+    global whiteconeattack, kingattack, medattack, whitepawnattack
+    global knightattack, rookattack
     """ attack[from][to]"""
     dirs = [-17, -15, -10, -6, 6, 10, 15, 17]
 

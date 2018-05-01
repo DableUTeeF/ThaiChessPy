@@ -1,9 +1,7 @@
-global BR, BN, BC, BM, BK, EM, BP
-global WP, WR, WN, WC, WK, WM
-global evaltable, kingend, BLACK
-
-
 def Inittable():
+    global BR, BN, BC, BM, BK, EM, BP
+    global WP, WR, WN, WC, WK, WM
+    global evaltable, kingend, BLACK
     atable = [0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0,

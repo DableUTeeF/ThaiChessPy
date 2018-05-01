@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
-from init import Initgame
-
+from init import *
+from move import *
 
 class movetype:
     def __init__(self, lens):
@@ -140,11 +140,11 @@ def main():
                 else:
                     print("\n Stalemate")
                 break
-            j += 1
             if j % 9 == 0:
                 print("\n %d.", j)
             else:
                 print(" %d.", j)
+            j += 1
             Showmove(tree[i])
         print("\n Enter Number of move (n,t,c,x=New game,Takeback,Computer to move,exit) => ")
         try:
