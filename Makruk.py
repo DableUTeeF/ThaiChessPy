@@ -1,7 +1,10 @@
 from __future__ import print_function
 import numpy as np
-from init import *
-from move import *
+from init import Initgame
+from move import Makemove, Unmakemove
+from search import Searchroot, Incheck
+from gen import Generatemove
+
 
 class movetype:
     def __init__(self, lens):
@@ -226,6 +229,10 @@ def Printboard():
 
 def Showmove(m):
     print("%s%d%s%d" % (chr(ord('a') + FILE(m.f)), 8 - RANK(m.f), chr(ord('a') + FILE(m.t)), 8 - RANK(m.t)))
+
+
+def atoi(astr):
+    return int(astr)
 
 
 if __name__ == '__main__':
