@@ -1,8 +1,12 @@
 import numpy as np
 from time import clock
 from move import *
-from Makruk import Showmove
 from gen import *
+
+
+def Showmove(m):
+    global FILE, RANK
+    print("%s%d%s%d" % (chr(ord('a') + FILE(m.f)), 8 - RANK(m.f), chr(ord('a') + FILE(m.t)), 8 - RANK(m.t)))
 
 
 def Searchroot(depth):
