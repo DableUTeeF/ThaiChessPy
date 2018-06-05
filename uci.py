@@ -16,19 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import chess
+import ThaiChessPy as chess
 
-from chess.engine import EngineTerminatedException
-from chess.engine import EngineStateException
-from chess.engine import MockProcess
-from chess.engine import PopenProcess
-from chess.engine import SpurProcess
-from chess.engine import Option
-from chess.engine import OptionMap
-from chess.engine import LOGGER
-from chess.engine import FUTURE_POLL_TIMEOUT
-from chess.engine import _popen_engine
-from chess.engine import _spur_spawn_engine
+from .engine import EngineTerminatedException
+from .engine import EngineStateException
+from .engine import MockProcess
+from .engine import PopenProcess
+from .engine import SpurProcess
+from .engine import Option
+from .engine import OptionMap
+from .engine import LOGGER
+from .engine import FUTURE_POLL_TIMEOUT
+from .engine import _popen_engine
+from .engine import _spur_spawn_engine
 
 import collections
 import concurrent.futures

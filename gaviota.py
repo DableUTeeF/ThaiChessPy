@@ -25,7 +25,7 @@ import os
 import os.path
 import logging
 import struct
-import chess
+import ThaiChessPy as chess
 
 LOGGER = logging.getLogger(__name__)
 

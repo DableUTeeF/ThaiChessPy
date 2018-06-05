@@ -22,16 +22,16 @@ import concurrent.futures
 import shlex
 import threading
 
-from chess.engine import EngineTerminatedException
-from chess.engine import EngineStateException
-from chess.engine import Option
-from chess.engine import OptionMap
-from chess.engine import LOGGER
-from chess.engine import FUTURE_POLL_TIMEOUT
-from chess.engine import _popen_engine
-from chess.engine import _spur_spawn_engine
+from .engine import EngineTerminatedException
+from .engine import EngineStateException
+from .engine import Option
+from .engine import OptionMap
+from .engine import LOGGER
+from .engine import FUTURE_POLL_TIMEOUT
+from .engine import _popen_engine
+from .engine import _spur_spawn_engine
 
-import chess
+import ThaiChessPy as chess
 
 
 DUMMY_RESPONSES = [ENGINE_RESIGN, GAME_DRAW] = [-1, -2]

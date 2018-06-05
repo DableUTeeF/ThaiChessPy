@@ -22,7 +22,7 @@
 
 from __future__ import division
 
-import chess
+import ThaiChessPy as chess
 import collections
 import math
 
