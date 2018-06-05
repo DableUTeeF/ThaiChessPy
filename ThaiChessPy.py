@@ -1,33 +1,9 @@
 # -*- coding: utf-8 -*-
-#
-# This file is part of the python-chess library.
-# Copyright (C) 2012-2018 Niklas Fiekas <niklas.fiekas@backscattering.de>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 """
 A pure Python chess library with move generation and validation, Polyglot
 opening book probing, PGN reading and writing, Gaviota tablebase probing,
 Syzygy tablebase probing and XBoard/UCI engine communication.
 """
-
-__author__ = "Niklas Fiekas"
-
-__email__ = "niklas.fiekas@backscattering.de"
-
-__version__ = "0.23.6"
-
 import collections
 import copy
 import re
@@ -37,15 +13,15 @@ import struct
 COLORS = [WHITE, BLACK] = [True, False]
 COLOR_NAMES = ["black", "white"]
 
-PIECE_TYPES = [PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING] = range(1, 7)
-PIECE_SYMBOLS = ["", "p", "n", "b", "r", "q", "k"]
-PIECE_NAMES = ["", "pawn", "knight", "bishop", "rook", "queen", "king"]
+PIECE_TYPES = [PAWN, KNIGHT, BISHOP, ROOK, med, KING] = range(1, 7)
+PIECE_SYMBOLS = ["", "p", "n", "b", "r", "m", "k"]
+PIECE_NAMES = ["", "pawn", "knight", "bishop", "rook", "med", "king"]
 
 UNICODE_PIECE_SYMBOLS = {
     "R": u"♖", "r": u"♜",
     "N": u"♘", "n": u"♞",
     "B": u"♗", "b": u"♝",
-    "Q": u"♕", "q": u"♛",
+    "M": u"♕", "m": u"♛",
     "K": u"♔", "k": u"♚",
     "P": u"♙", "p": u"♟",
 }
@@ -54,10 +30,10 @@ FILE_NAMES = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
 RANK_NAMES = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
-STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+STARTING_FEN = "rnbmkbnr/8/pppppppp/8/8/PPPPPPPP/8/RNBKMBNR w KQkq - 0 1"
 """The FEN for the standard chess starting position."""
 
-STARTING_BOARD_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+STARTING_BOARD_FEN = "rnbmkbnr/8/pppppppp/8/8/PPPPPPPP/8/RNBKMBNR"
 """The board part of the FEN for the standard chess starting position."""
 
 STATUS_VALID = 0
@@ -77,7 +53,6 @@ STATUS_RACE_CHECK = 4096
 STATUS_RACE_OVER = 8192
 STATUS_RACE_MATERIAL = 16384
 
-
 SQUARES = [
     A1, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,
@@ -88,21 +63,26 @@ SQUARES = [
     A7, B7, C7, D7, E7, F7, G7, H7,
     A8, B8, C8, D8, E8, F8, G8, H8] = range(64)
 
+
 def square(file_index, rank_index):
     """Gets a square number by file and rank index."""
     return rank_index * 8 + file_index
+
 
 def square_file(square):
     """Gets the file index of the square where ``0`` is the a file."""
     return square & 7
 
+
 def square_rank(square):
     """Gets the rank index of the square where ``0`` is the first rank."""
     return square >> 3
 
+
 def square_name(square):
     """Gets the name of the square, like ``a3``."""
     return FILE_NAMES[square_file(square)] + RANK_NAMES[square_rank(square)]
+
 
 def square_distance(a, b):
     """
@@ -110,13 +90,14 @@ def square_distance(a, b):
     """
     return max(abs(square_file(a) - square_file(b)), abs(square_rank(a) - square_rank(b)))
 
+
 def square_mirror(square):
     """Mirrors the square vertically."""
     return square ^ 0x38
 
+
 SQUARES_180 = [square_mirror(sq) for sq in SQUARES]
 SQUARE_NAMES = [square_name(sq) for sq in SQUARES]
-
 
 BB_VOID = 0
 BB_ALL = 0xffffffffffffffff
@@ -165,14 +146,17 @@ BB_BACKRANKS = BB_RANK_1 | BB_RANK_8
 def lsb(bb):
     return (bb & -bb).bit_length() - 1
 
+
 def scan_forward(bb):
     while bb:
         r = bb & -bb
         yield r.bit_length() - 1
         bb ^= r
 
+
 def msb(bb):
     return bb.bit_length() - 1
+
 
 def scan_reversed(bb, _BB_SQUARES=BB_SQUARES):
     while bb:
@@ -180,8 +164,10 @@ def scan_reversed(bb, _BB_SQUARES=BB_SQUARES):
         yield r
         bb ^= _BB_SQUARES[r]
 
+
 def popcount(bb, _bin=bin):
     return _bin(bb).count("1")
+
 
 def bswap(bb, _be=struct.Struct(">Q"), _le=struct.Struct("<Q")):
     return _be.unpack(_le.pack(bb))[0]
@@ -190,35 +176,46 @@ def bswap(bb, _be=struct.Struct(">Q"), _le=struct.Struct("<Q")):
 def shift_down(b):
     return b >> 8
 
+
 def shift_2_down(b):
     return b >> 16
+
 
 def shift_up(b):
     return (b << 8) & BB_ALL
 
+
 def shift_2_up(b):
     return (b << 16) & BB_ALL
+
 
 def shift_right(b):
     return (b << 1) & ~BB_FILE_A & BB_ALL
 
+
 def shift_2_right(b):
     return (b << 2) & ~BB_FILE_A & ~BB_FILE_B & BB_ALL
+
 
 def shift_left(b):
     return (b >> 1) & ~BB_FILE_H
 
+
 def shift_2_left(b):
     return (b >> 2) & ~BB_FILE_G & ~BB_FILE_H
+
 
 def shift_up_left(b):
     return (b << 7) & ~BB_FILE_H & BB_ALL
 
+
 def shift_up_right(b):
     return (b << 9) & ~BB_FILE_A & BB_ALL
 
+
 def shift_down_left(b):
     return (b >> 9) & ~BB_FILE_H
+
 
 def shift_down_right(b):
     return (b >> 7) & ~BB_FILE_A
@@ -242,14 +239,17 @@ def _sliding_attacks(square, occupied, deltas):
 
     return attacks
 
+
 BB_KNIGHT_ATTACKS = [_sliding_attacks(sq, BB_ALL, [17, 15, 10, 6, -17, -15, -10, -6]) for sq in SQUARES]
 BB_KING_ATTACKS = [_sliding_attacks(sq, BB_ALL, [9, 8, 7, 1, -9, -8, -7, -1]) for sq in SQUARES]
+BB_MED_ATTACKS = [_sliding_attacks(sq, BB_ALL, [9, 7, -9, -7]) for sq in SQUARES]
 BB_PAWN_ATTACKS = [[_sliding_attacks(sq, BB_ALL, deltas) for sq in SQUARES] for deltas in [[-7, -9], [7, 9]]]
 
 
 def _edges(square):
     return (((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[square_rank(square)]) |
             ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[square_file(square)]))
+
 
 def _carry_rippler(mask):
     # Carry-Rippler trick to iterate subsets of mask.
@@ -259,6 +259,7 @@ def _carry_rippler(mask):
         subset = (subset - mask) & mask
         if not subset:
             break
+
 
 def _attack_table(deltas):
     mask_table = []
@@ -276,6 +277,7 @@ def _attack_table(deltas):
 
     return mask_table, attack_table
 
+
 BB_DIAG_MASKS, BB_DIAG_ATTACKS = _attack_table([-9, -7, 7, 9])
 BB_FILE_MASKS, BB_FILE_ATTACKS = _attack_table([-8, 8])
 BB_RANK_MASKS, BB_RANK_ATTACKS = _attack_table([-1, 1])
@@ -290,13 +292,16 @@ def _rays():
         for b, bb_b in enumerate(BB_SQUARES):
             if BB_DIAG_ATTACKS[a][0] & bb_b:
                 rays_row.append((BB_DIAG_ATTACKS[a][0] & BB_DIAG_ATTACKS[b][0]) | bb_a | bb_b)
-                between_row.append(BB_DIAG_ATTACKS[a][BB_DIAG_MASKS[a] & bb_b] & BB_DIAG_ATTACKS[b][BB_DIAG_MASKS[b] & bb_a])
+                between_row.append(
+                    BB_DIAG_ATTACKS[a][BB_DIAG_MASKS[a] & bb_b] & BB_DIAG_ATTACKS[b][BB_DIAG_MASKS[b] & bb_a])
             elif BB_RANK_ATTACKS[a][0] & bb_b:
                 rays_row.append(BB_RANK_ATTACKS[a][0] | bb_a)
-                between_row.append(BB_RANK_ATTACKS[a][BB_RANK_MASKS[a] & bb_b] & BB_RANK_ATTACKS[b][BB_RANK_MASKS[b] & bb_a])
+                between_row.append(
+                    BB_RANK_ATTACKS[a][BB_RANK_MASKS[a] & bb_b] & BB_RANK_ATTACKS[b][BB_RANK_MASKS[b] & bb_a])
             elif BB_FILE_ATTACKS[a][0] & bb_b:
                 rays_row.append(BB_FILE_ATTACKS[a][0] | bb_a)
-                between_row.append(BB_FILE_ATTACKS[a][BB_FILE_MASKS[a] & bb_b] & BB_FILE_ATTACKS[b][BB_FILE_MASKS[b] & bb_a])
+                between_row.append(
+                    BB_FILE_ATTACKS[a][BB_FILE_MASKS[a] & bb_b] & BB_FILE_ATTACKS[b][BB_FILE_MASKS[b] & bb_a])
             else:
                 rays_row.append(0)
                 between_row.append(0)
@@ -304,8 +309,8 @@ def _rays():
         between.append(between_row)
     return rays, between
 
-BB_RAYS, BB_BETWEEN = _rays()
 
+BB_RAYS, BB_BETWEEN = _rays()
 
 SAN_REGEX = re.compile(r"^([NBKRQ])?([a-h])?([1-8])?[\-x]?([a-h][1-8])(=?[nbrqkNBRQK])?(\+|#)?\Z")
 
@@ -398,7 +403,7 @@ class Move(object):
         Gets an UCI string for the move.
 
         For example, a move from a7 to a8 would be ``a7a8`` or ``a7a8q``
-        (if the latter is a promotion to a queen).
+        (if the latter is a promotion to a med).
 
         The UCI representation of a null move is ``0000``.
         """
@@ -511,18 +516,18 @@ class BaseBoard(object):
             self._set_board_fen(board_fen)
 
     def _reset_board(self):
-        self.pawns = BB_RANK_2 | BB_RANK_7
+        self.pawns = BB_RANK_3 | BB_RANK_6
         self.knights = BB_B1 | BB_G1 | BB_B8 | BB_G8
         self.bishops = BB_C1 | BB_F1 | BB_C8 | BB_F8
         self.rooks = BB_CORNERS
-        self.queens = BB_D1 | BB_D8
-        self.kings = BB_E1 | BB_E8
+        self.meds = BB_E1 | BB_D8
+        self.kings = BB_D1 | BB_E8
 
         self.promoted = BB_VOID
 
-        self.occupied_co[WHITE] = BB_RANK_1 | BB_RANK_2
-        self.occupied_co[BLACK] = BB_RANK_7 | BB_RANK_8
-        self.occupied = BB_RANK_1 | BB_RANK_2 | BB_RANK_7 | BB_RANK_8
+        self.occupied_co[WHITE] = BB_RANK_1 | BB_RANK_3
+        self.occupied_co[BLACK] = BB_RANK_6 | BB_RANK_8
+        self.occupied = BB_RANK_1 | BB_RANK_3 | BB_RANK_6 | BB_RANK_8
 
     def reset_board(self):
         self._reset_board()
@@ -532,7 +537,7 @@ class BaseBoard(object):
         self.knights = BB_VOID
         self.bishops = BB_VOID
         self.rooks = BB_VOID
-        self.queens = BB_VOID
+        self.meds = BB_VOID
         self.kings = BB_VOID
 
         self.promoted = BB_VOID
@@ -554,8 +559,8 @@ class BaseBoard(object):
             bb = self.bishops
         elif piece_type == ROOK:
             bb = self.rooks
-        elif piece_type == QUEEN:
-            bb = self.queens
+        elif piece_type == med:
+            bb = self.meds
         elif piece_type == KING:
             bb = self.kings
 
@@ -591,8 +596,8 @@ class BaseBoard(object):
             return BISHOP
         elif self.rooks & mask:
             return ROOK
-        elif self.queens & mask:
-            return QUEEN
+        elif self.meds & mask:
+            return med
         elif self.kings & mask:
             return KING
 
@@ -620,11 +625,13 @@ class BaseBoard(object):
             return BB_KNIGHT_ATTACKS[square]
         elif bb_square & self.kings:
             return BB_KING_ATTACKS[square]
+        elif bb_square & self.meds:
+            return BB_MED_ATTACKS[square]
         else:
             attacks = 0
-            if bb_square & self.bishops or bb_square & self.queens:
+            if bb_square & self.bishops:
                 attacks = BB_DIAG_ATTACKS[square][BB_DIAG_MASKS[square] & self.occupied]
-            if bb_square & self.rooks or bb_square & self.queens:
+            if bb_square & self.rooks:
                 attacks |= (BB_RANK_ATTACKS[square][BB_RANK_MASKS[square] & self.occupied] |
                             BB_FILE_ATTACKS[square][BB_FILE_MASKS[square] & self.occupied])
             return attacks
@@ -645,16 +652,16 @@ class BaseBoard(object):
         file_pieces = BB_FILE_MASKS[square] & occupied
         diag_pieces = BB_DIAG_MASKS[square] & occupied
 
-        queens_and_rooks = self.queens | self.rooks
-        queens_and_bishops = self.queens | self.bishops
+        meds_and_rooks = self.meds | self.rooks
+        meds_and_bishops = self.meds | self.bishops
 
         attackers = (
-            (BB_KING_ATTACKS[square] & self.kings) |
-            (BB_KNIGHT_ATTACKS[square] & self.knights) |
-            (BB_RANK_ATTACKS[square][rank_pieces] & queens_and_rooks) |
-            (BB_FILE_ATTACKS[square][file_pieces] & queens_and_rooks) |
-            (BB_DIAG_ATTACKS[square][diag_pieces] & queens_and_bishops) |
-            (BB_PAWN_ATTACKS[not color][square] & self.pawns))
+                (BB_KING_ATTACKS[square] & self.kings) |
+                (BB_KNIGHT_ATTACKS[square] & self.knights) |
+                (BB_RANK_ATTACKS[square][rank_pieces] & meds_and_rooks) |
+                (BB_FILE_ATTACKS[square][file_pieces] & meds_and_rooks) |
+                (BB_DIAG_ATTACKS[square][diag_pieces] & meds_and_bishops) |
+                (BB_PAWN_ATTACKS[not color][square] & self.pawns))
 
         return attackers & self.occupied_co[color]
 
@@ -687,9 +694,9 @@ class BaseBoard(object):
 
         square_mask = BB_SQUARES[square]
 
-        for attacks, sliders in [(BB_FILE_ATTACKS, self.rooks | self.queens),
-                                 (BB_RANK_ATTACKS, self.rooks | self.queens),
-                                 (BB_DIAG_ATTACKS, self.bishops | self.queens)]:
+        for attacks, sliders in [(BB_FILE_ATTACKS, self.rooks | self.meds),
+                                 (BB_RANK_ATTACKS, self.rooks | self.meds),
+                                 (BB_DIAG_ATTACKS, self.bishops | self.meds)]:
             rays = attacks[king][0]
             if rays & square_mask:
                 snipers = rays & sliders & self.occupied_co[not color]
@@ -748,8 +755,8 @@ class BaseBoard(object):
             self.bishops ^= mask
         elif piece_type == ROOK:
             self.rooks ^= mask
-        elif piece_type == QUEEN:
-            self.queens ^= mask
+        elif piece_type == med:
+            self.meds ^= mask
         elif piece_type == KING:
             self.kings ^= mask
         else:
@@ -786,8 +793,8 @@ class BaseBoard(object):
             self.bishops |= mask
         elif piece_type == ROOK:
             self.rooks |= mask
-        elif piece_type == QUEEN:
-            self.queens |= mask
+        elif piece_type == med:
+            self.meds |= mask
         elif piece_type == KING:
             self.kings |= mask
 
@@ -942,11 +949,11 @@ class BaseBoard(object):
         bb_file = bb * 2
         self.bishops = (BB_FILES[bw_file] | BB_FILES[bb_file]) & BB_BACKRANKS
 
-        # Queens.
+        # meds.
         q_file = q
         q_file += int(min(bw_file, bb_file) <= q_file)
         q_file += int(max(bw_file, bb_file) <= q_file)
-        self.queens = BB_FILES[q_file] & BB_BACKRANKS
+        self.meds = BB_FILES[q_file] & BB_BACKRANKS
 
         used = [bw_file, bb_file, q_file]
 
@@ -1010,7 +1017,7 @@ class BaseBoard(object):
             return None
         if popcount(self.knights) != 4:
             return None
-        if popcount(self.queens) != 2:
+        if popcount(self.meds) != 2:
             return None
         if popcount(self.kings) != 2:
             return None
@@ -1021,7 +1028,7 @@ class BaseBoard(object):
             return None
         if (BB_RANK_1 & self.rooks) << 56 != BB_RANK_8 & self.rooks:
             return None
-        if (BB_RANK_1 & self.queens) << 56 != BB_RANK_8 & self.queens:
+        if (BB_RANK_1 & self.meds) << 56 != BB_RANK_8 & self.meds:
             return None
         if (BB_RANK_1 & self.kings) << 56 != BB_RANK_8 & self.kings:
             return None
@@ -1048,7 +1055,7 @@ class BaseBoard(object):
         n0s = [0, 4, 7, 9]
         for square in range(A1, H1 + 1):
             bb = BB_SQUARES[square]
-            if bb & self.queens:
+            if bb & self.meds:
                 qf = True
             elif bb & self.rooks or bb & self.kings:
                 if bb & self.kings:
@@ -1165,7 +1172,7 @@ class BaseBoard(object):
                 return True
             elif self.rooks != board.rooks:
                 return True
-            elif self.queens != board.queens:
+            elif self.meds != board.meds:
                 return True
             elif self.kings != board.kings:
                 return True
@@ -1187,7 +1194,7 @@ class BaseBoard(object):
         board.knights = bswap(self.knights)
         board.bishops = bswap(self.bishops)
         board.rooks = bswap(self.rooks)
-        board.queens = bswap(self.queens)
+        board.meds = bswap(self.meds)
         board.kings = bswap(self.kings)
 
         board.occupied_co[WHITE] = bswap(self.occupied_co[BLACK])
@@ -1205,7 +1212,7 @@ class BaseBoard(object):
         board.knights = self.knights
         board.bishops = self.bishops
         board.rooks = self.rooks
-        board.queens = self.queens
+        board.meds = self.meds
         board.kings = self.kings
 
         board.occupied_co[WHITE] = self.occupied_co[WHITE]
@@ -1253,7 +1260,7 @@ class _BoardState(object):
         self.knights = board.knights
         self.bishops = board.bishops
         self.rooks = board.rooks
-        self.queens = board.queens
+        self.meds = board.meds
         self.kings = board.kings
 
         self.occupied_w = board.occupied_co[WHITE]
@@ -1382,7 +1389,11 @@ class Board(BaseBoard):
         for from_square in scan_reversed(non_pawns):
             moves = self.attacks_mask(from_square) & ~our_pieces & to_mask
             for to_square in scan_reversed(moves):
-                yield Move(from_square, to_square)
+                ss = Move(from_square, to_square)
+                s = str(ss)
+                if s == 'd1e2':
+                    pass
+                yield ss
 
         # Generate castling moves.
         if from_mask & self.kings:
@@ -1398,12 +1409,12 @@ class Board(BaseBoard):
         capturers = pawns
         for from_square in scan_reversed(capturers):
             targets = (
-                BB_PAWN_ATTACKS[self.turn][from_square] &
-                self.occupied_co[not self.turn] & to_mask)
+                    BB_PAWN_ATTACKS[self.turn][from_square] &
+                    self.occupied_co[not self.turn] & to_mask)
 
             for to_square in scan_reversed(targets):
                 if square_rank(to_square) in [0, 7]:
-                    yield Move(from_square, to_square, QUEEN)
+                    yield Move(from_square, to_square, med)
                     yield Move(from_square, to_square, ROOK)
                     yield Move(from_square, to_square, BISHOP)
                     yield Move(from_square, to_square, KNIGHT)
@@ -1426,7 +1437,7 @@ class Board(BaseBoard):
             from_square = to_square + (8 if self.turn == BLACK else -8)
 
             if square_rank(to_square) in [0, 7]:
-                yield Move(from_square, to_square, QUEEN)
+                yield Move(from_square, to_square, med)
                 yield Move(from_square, to_square, ROOK)
                 yield Move(from_square, to_square, BISHOP)
                 yield Move(from_square, to_square, KNIGHT)
@@ -1451,9 +1462,9 @@ class Board(BaseBoard):
             return
 
         capturers = (
-            self.pawns & self.occupied_co[self.turn] & from_mask &
-            BB_PAWN_ATTACKS[not self.turn][self.ep_square] &
-            BB_RANKS[4 if self.turn else 3])
+                self.pawns & self.occupied_co[self.turn] & from_mask &
+                BB_PAWN_ATTACKS[not self.turn][self.ep_square] &
+                BB_RANKS[4 if self.turn else 3])
 
         for capturer in scan_reversed(capturers):
             yield Move(capturer, self.ep_square)
@@ -1480,7 +1491,8 @@ class Board(BaseBoard):
         checkers = self.attackers_mask(not self.turn, king)
         if checkers:
             # If already in check, look if it is an evasion.
-            if move not in self._generate_evasions(king, checkers, BB_SQUARES[move.from_square], BB_SQUARES[move.to_square]):
+            if move not in self._generate_evasions(king, checkers, BB_SQUARES[move.from_square],
+                                                   BB_SQUARES[move.to_square]):
                 return True
 
         return not self._is_safe(king, self._slider_blockers(king), move)
@@ -1544,7 +1556,8 @@ class Board(BaseBoard):
     def is_legal(self, move):
         return not self.is_variant_end() and self.is_pseudo_legal(move) and not self.is_into_check(move)
 
-    def is_variant_end(self):
+    @staticmethod
+    def is_variant_end():
         """
         Checks if the game is over due to a special variant end condition.
 
@@ -1557,15 +1570,18 @@ class Board(BaseBoard):
         """
         return False
 
-    def is_variant_loss(self):
+    @staticmethod
+    def is_variant_loss():
         """Checks if a special variant-specific loss condition is fulfilled."""
         return False
 
-    def is_variant_win(self):
+    @staticmethod
+    def is_variant_win():
         """Checks if a special variant-specific win condition is fulfilled."""
         return False
 
-    def is_variant_draw(self):
+    @staticmethod
+    def is_variant_draw():
         """
         Checks if a special variant-specific drawing condition is fulfilled.
         """
@@ -1667,7 +1683,7 @@ class Board(BaseBoard):
     def is_insufficient_material(self):
         """Checks for a draw due to insufficient mating material."""
         # Enough material to mate.
-        if self.pawns or self.rooks or self.queens:
+        if self.pawns or self.rooks or self.meds:
             return False
 
         # A single knight or a single bishop.
@@ -1757,7 +1773,7 @@ class Board(BaseBoard):
         """
         transposition_key = self._transposition_key()
         transpositions = collections.Counter()
-        transpositions.update((transposition_key, ))
+        transpositions.update((transposition_key,))
 
         # Count positions.
         switchyard = collections.deque()
@@ -1768,7 +1784,7 @@ class Board(BaseBoard):
             if self.is_irreversible(move):
                 break
 
-            transpositions.update((self._transposition_key(), ))
+            transpositions.update((self._transposition_key(),))
 
         while switchyard:
             self.push(switchyard.pop())
@@ -1921,7 +1937,7 @@ class Board(BaseBoard):
         self.knights = state.knights
         self.bishops = state.bishops
         self.rooks = state.rooks
-        self.queens = state.queens
+        self.meds = state.meds
         self.kings = state.kings
 
         self.occupied_co[WHITE] = state.occupied_w
@@ -2220,7 +2236,8 @@ class Board(BaseBoard):
                 position = Board(self.shredder_fen()) if opcode == "pv" else self
                 iterator = operand.__iter__()
                 first_move = next(iterator)
-                if hasattr(first_move, "from_square") and hasattr(first_move, "to_square") and hasattr(first_move, "promotion"):
+                if hasattr(first_move, "from_square") and hasattr(first_move, "to_square") and hasattr(first_move,
+                                                                                                       "promotion"):
                     epd.append(" ")
                     epd.append(position.san(first_move))
                     if opcode == "pv":
@@ -2550,7 +2567,7 @@ class Board(BaseBoard):
             if san in ["O-O", "O-O+", "O-O#"]:
                 return next(move for move in self.generate_castling_moves() if self.is_kingside_castling(move))
             elif san in ["O-O-O", "O-O-O+", "O-O-O#"]:
-                return next(move for move in self.generate_castling_moves() if self.is_queenside_castling(move))
+                return next(move for move in self.generate_castling_moves() if self.is_medside_castling(move))
         except StopIteration:
             raise ValueError("illegal san: {0} in {1}".format(repr(san), self.fen()))
 
@@ -2679,7 +2696,8 @@ class Board(BaseBoard):
 
     def is_zeroing(self, move):
         """Checks if the given pseudo-legal move is a capture or pawn move."""
-        return bool(BB_SQUARES[move.from_square] & self.pawns or BB_SQUARES[move.to_square] & self.occupied_co[not self.turn])
+        return bool(
+            BB_SQUARES[move.from_square] & self.pawns or BB_SQUARES[move.to_square] & self.occupied_co[not self.turn])
 
     def is_irreversible(self, move):
         """
@@ -2708,9 +2726,9 @@ class Board(BaseBoard):
         """
         return self.is_castling(move) and square_file(move.to_square) > square_file(move.from_square)
 
-    def is_queenside_castling(self, move):
+    def is_medside_castling(self, move):
         """
-        Checks if the given pseudo-legal move is a queenside castling move.
+        Checks if the given pseudo-legal move is a medside castling move.
         """
         return self.is_castling(move) and square_file(move.to_square) < square_file(move.from_square)
 
@@ -2796,9 +2814,9 @@ class Board(BaseBoard):
 
         return False
 
-    def has_queenside_castling_rights(self, color):
+    def has_medside_castling_rights(self, color):
         """
-        Checks if the given side has queenside (that is a-side in Chess960)
+        Checks if the given side has medside (that is a-side in Chess960)
         castling rights.
         """
         backrank = BB_RANK_1 if color == WHITE else BB_RANK_8
@@ -2965,26 +2983,26 @@ class Board(BaseBoard):
                      ~BB_SQUARES[capturer] | BB_SQUARES[self.ep_square])
 
         # Horizontal attack on the fifth or fourth rank.
-        horizontal_attackers = self.occupied_co[not self.turn] & (self.rooks | self.queens)
+        horizontal_attackers = self.occupied_co[not self.turn] & (self.rooks | self.meds)
         if BB_RANK_ATTACKS[king][BB_RANK_MASKS[king] & occupancy] & horizontal_attackers:
             return True
 
         # Diagonal skewers. These are not actually possible in a real game,
         # because if the latest double pawn move covers a diagonal attack,
         # then the other side would have been in check already.
-        diagonal_attackers = self.occupied_co[not self.turn] & (self.bishops | self.queens)
+        diagonal_attackers = self.occupied_co[not self.turn] & (self.bishops | self.meds)
         if BB_DIAG_ATTACKS[king][BB_DIAG_MASKS[king] & occupancy] & diagonal_attackers:
             return True
 
         return False
 
     def _slider_blockers(self, king):
-        rooks_and_queens = self.rooks | self.queens
-        bishops_and_queens = self.bishops | self.queens
+        rooks_and_meds = self.rooks | self.meds
+        bishops_and_meds = self.bishops | self.meds
 
-        snipers = ((BB_RANK_ATTACKS[king][0] & rooks_and_queens) |
-                   (BB_FILE_ATTACKS[king][0] & rooks_and_queens) |
-                   (BB_DIAG_ATTACKS[king][0] & bishops_and_queens))
+        snipers = ((BB_RANK_ATTACKS[king][0] & rooks_and_meds) |
+                   (BB_FILE_ATTACKS[king][0] & rooks_and_meds) |
+                   (BB_DIAG_ATTACKS[king][0] & bishops_and_meds))
 
         blockers = 0
 
@@ -3011,7 +3029,7 @@ class Board(BaseBoard):
                     BB_RAYS[move.from_square][move.to_square] & BB_SQUARES[king])
 
     def _generate_evasions(self, king, checkers, from_mask=BB_ALL, to_mask=BB_ALL):
-        sliders = checkers & (self.bishops | self.rooks | self.queens)
+        sliders = checkers & (self.bishops | self.rooks | self.meds)
 
         attacked = 0
         for checker in scan_reversed(sliders):
@@ -3078,7 +3096,7 @@ class Board(BaseBoard):
         # Test the special case where we castle and our rook shielded us from
         # an attack, so castling would be into check.
         rank_pieces = BB_RANK_MASKS[king_to] & (self.occupied ^ rook_bb)
-        sliders = (self.queens | self.rooks) & self.occupied_co[not self.turn]
+        sliders = (self.meds | self.rooks) & self.occupied_co[not self.turn]
         return BB_RANK_ATTACKS[king_to][rank_pieces] & sliders
 
     def generate_castling_moves(self, from_mask=BB_ALL, to_mask=BB_ALL):
@@ -3153,7 +3171,7 @@ class Board(BaseBoard):
 
     def _transposition_key(self):
         return (self.pawns, self.knights, self.bishops, self.rooks,
-                self.queens, self.kings,
+                self.meds, self.kings,
                 self.occupied_co[WHITE], self.occupied_co[BLACK],
                 self.turn, self.clean_castling_rights(),
                 self.ep_square if self.has_legal_en_passant() else None)

@@ -27,9 +27,7 @@ import logging
 import struct
 import chess
 
-
 LOGGER = logging.getLogger(__name__)
-
 
 NOSQUARE = 64
 NOINDEX = -1
@@ -99,20 +97,26 @@ def map24_b(s):
     s = s - 8
     return ((s & 3) + s) >> 1
 
+
 def map88(x):
     return x + (x & 56)
+
 
 def in_queenside(x):
     return (x & (1 << 2)) == 0
 
+
 def flip_we(x):
     return x ^ 7
+
 
 def flip_ns(x):
     return x ^ 56
 
+
 def flip_nw_se(x):
     return ((x & 7) << 3) | (x >> 3)
+
 
 def idx_is_empty(x):
     return x == -1
@@ -148,8 +152,10 @@ def flip_type(x, y):
 
     return ret
 
+
 def init_flipt():
     return [[flip_type(j, i) for i in range(64)] for j in range(64)]
+
 
 FLIPT = init_flipt()
 
@@ -176,6 +182,7 @@ def init_pp48_idx():
                 idx += 1
 
     return pp48_idx, pp48_sq_x, pp48_sq_y
+
 
 PP48_IDX, PP48_SQ_X, PP48_SQ_Y = init_pp48_idx()
 
@@ -217,6 +224,7 @@ def init_ppp48_idx():
 
     return ppp48_idx, ppp48_sq_x, ppp48_sq_y, ppp48_sq_z
 
+
 PPP48_IDX, PPP48_SQ_X, PPP48_SQ_Y, PPP48_SQ_Z = init_ppp48_idx()
 
 
@@ -236,6 +244,7 @@ def init_aaidx():
                 idx += 1
 
     return aabase, aaidx
+
 
 AABASE, AAIDX = init_aaidx()
 
@@ -263,6 +272,7 @@ def init_aaa():
                 idx += 1
 
     return aaa_base, aaa_xyz
+
 
 AAA_BASE, AAA_XYZ = init_aaa()
 
@@ -311,6 +321,7 @@ def pp_putanchorfirst(a, b):
 
     return anchor, loosen
 
+
 def wsq_to_pidx24(pawn):
     sq = pawn
 
@@ -320,6 +331,7 @@ def wsq_to_pidx24(pawn):
     idx24 = (sq + (sq & 3)) >> 1
     return idx24
 
+
 def wsq_to_pidx48(pawn):
     sq = pawn
 
@@ -328,6 +340,7 @@ def wsq_to_pidx48(pawn):
 
     idx48 = sq
     return idx48
+
 
 def init_ppidx():
     ppidx = [[-1] * 48 for i in range(24)]
@@ -361,6 +374,7 @@ def init_ppidx():
 
     return ppidx, pp_hi24, pp_lo48
 
+
 PPIDX, PP_HI24, PP_LO48 = init_ppidx()
 
 
@@ -389,6 +403,7 @@ def norm_kkindex(x, y):
 
     return x, y
 
+
 def init_kkidx():
     kkidx = [[-1] * 64 for x in range(64)]
     bksq = [-1] * MAX_KKINDEX
@@ -409,6 +424,7 @@ def init_kkidx():
                     idx += 1
 
     return kkidx, wksq, bksq
+
 
 KKIDX, WKSQ, BKSQ = init_kkidx()
 
@@ -440,6 +456,7 @@ def kxk_pctoindex(c):
 
     return ki * BLOCK_Ax + ws[1]
 
+
 def kapkb_pctoindex(c):
     BLOCK_A = 64 * 64 * 64 * 64
     BLOCK_B = 64 * 64 * 64
@@ -465,10 +482,11 @@ def kapkb_pctoindex(c):
 
     sq = pawn
     sq ^= 56  # flip_ns
-    sq -= 8   # down one row
+    sq -= 8  # down one row
     pslice = (sq + (sq & 3)) >> 1
 
     return pslice * BLOCK_A + wk * BLOCK_B + bk * BLOCK_C + wa * BLOCK_D + ba
+
 
 def kabpk_pctoindex(c):
     BLOCK_A = 64 * 64 * 64 * 64
@@ -493,6 +511,7 @@ def kabpk_pctoindex(c):
     pslice = wsq_to_pidx24(pawn)
 
     return pslice * BLOCK_A + wk * BLOCK_B + bk * BLOCK_C + wa * BLOCK_D + wb
+
 
 def kabkp_pctoindex(c):
     BLOCK_A = 64 * 64 * 64 * 64
@@ -523,6 +542,7 @@ def kabkp_pctoindex(c):
 
     return pslice * BLOCK_A + wk * BLOCK_B + bk * BLOCK_C + wa * BLOCK_D + wb
 
+
 def kaapk_pctoindex(c):
     BLOCK_C = MAX_AAINDEX
     BLOCK_B = 64 * BLOCK_C
@@ -550,6 +570,7 @@ def kaapk_pctoindex(c):
         return NOINDEX
 
     return pslice * BLOCK_A + wk * BLOCK_B + bk * BLOCK_C + aa_combo
+
 
 def kaakp_pctoindex(c):
     BLOCK_C = MAX_AAINDEX
@@ -579,6 +600,7 @@ def kaakp_pctoindex(c):
         return NOINDEX
 
     return pslice * BLOCK_A + wk * BLOCK_B + bk * BLOCK_C + aa_combo
+
 
 def kapkp_pctoindex(c):
     BLOCK_A = 64 * 64 * 64
@@ -611,6 +633,7 @@ def kapkp_pctoindex(c):
 
     return pp_slice * BLOCK_A + wk * BLOCK_B + bk * BLOCK_C + wa
 
+
 def kappk_pctoindex(c):
     BLOCK_A = 64 * 64 * 64
     BLOCK_B = 64 * 64
@@ -642,6 +665,7 @@ def kappk_pctoindex(c):
 
     return pp_slice * BLOCK_A + wk * BLOCK_B + bk * BLOCK_C + wa
 
+
 def kppka_pctoindex(c):
     BLOCK_A = 64 * 64 * 64
     BLOCK_B = 64 * 64
@@ -671,6 +695,7 @@ def kppka_pctoindex(c):
         return NOINDEX
 
     return pp_slice * BLOCK_A + wk * BLOCK_B + bk * BLOCK_C + ba
+
 
 def kabck_pctoindex(c):
     N_WHITE = 4
@@ -703,6 +728,7 @@ def kabck_pctoindex(c):
 
     return ki * BLOCK_A + ws[1] * BLOCK_B + ws[2] * BLOCK_C + ws[3]
 
+
 def kabbk_pctoindex(c):
     N_WHITE = 4
     N_BLACK = 1
@@ -733,6 +759,7 @@ def kabbk_pctoindex(c):
         return NOINDEX
 
     return ki * BLOCK_Ax + ai * BLOCK_Bx + ws[1]
+
 
 def kaabk_pctoindex(c):
     N_WHITE = 4
@@ -765,10 +792,12 @@ def kaabk_pctoindex(c):
 
     return ki * BLOCK_Ax + ai * BLOCK_Bx + ws[3]
 
+
 def aaa_getsubi(x, y, z):
     bse = AAA_BASE[z]
     calc_idx = x + (y - 1) * y // 2 + bse
     return calc_idx
+
 
 def kaaak_pctoindex(c):
     N_WHITE = 4
@@ -817,6 +846,7 @@ def kaaak_pctoindex(c):
 
     return ki * BLOCK_Ax + ai
 
+
 def kppkp_pctoindex(c):
     BLOCK_Ax = MAX_PP48_INDEX * 64 * 64
     BLOCK_Bx = 64 * 64
@@ -848,6 +878,7 @@ def kppkp_pctoindex(c):
 
     return k * BLOCK_Ax + pp48_slice * BLOCK_Bx + wk * BLOCK_Cx + bk
 
+
 def kaakb_pctoindex(c):
     N_WHITE = 3
     N_BLACK = 2
@@ -878,6 +909,7 @@ def kaakb_pctoindex(c):
         return NOINDEX
 
     return ki * BLOCK_Ax + ai * BLOCK_Bx + bs[1]
+
 
 def kabkc_pctoindex(c):
     N_WHITE = 3
@@ -911,6 +943,7 @@ def kabkc_pctoindex(c):
 
     return ki * BLOCK_Ax + ws[1] * BLOCK_Bx + ws[2] * BLOCK_Cx + bs[1]
 
+
 def kpkp_pctoindex(c):
     BLOCK_Ax = 64 * 64
     BLOCK_Bx = 64
@@ -939,6 +972,7 @@ def kpkp_pctoindex(c):
 
     return pp_slice * BLOCK_Ax + wk * BLOCK_Bx + bk
 
+
 def kppk_pctoindex(c):
     BLOCK_Ax = 64 * 64
     BLOCK_Bx = 64
@@ -965,6 +999,7 @@ def kppk_pctoindex(c):
 
     return pp_slice * BLOCK_Ax + wk * BLOCK_Bx + bk
 
+
 def kapk_pctoindex(c):
     BLOCK_Ax = 64 * 64 * 64
     BLOCK_Bx = 64 * 64
@@ -986,10 +1021,11 @@ def kapk_pctoindex(c):
 
     sq = pawn
     sq ^= 56  # flip_ns
-    sq -= 8   # down one row
+    sq -= 8  # down one row
     pslice = ((sq + (sq & 3)) >> 1)
 
     return pslice * BLOCK_Ax + wk * BLOCK_Bx + bk * BLOCK_Cx + wa
+
 
 def kabk_pctoindex(c):
     BLOCK_Ax = 64 * 64
@@ -1019,6 +1055,7 @@ def kabk_pctoindex(c):
 
     return ki * BLOCK_Ax + ws[1] * BLOCK_Bx + ws[2]
 
+
 def kakp_pctoindex(c):
     BLOCK_Ax = 64 * 64 * 64
     BLOCK_Bx = 64 * 64
@@ -1043,6 +1080,7 @@ def kakp_pctoindex(c):
     pslice = (sq + (sq & 3)) >> 1
 
     return pslice * BLOCK_Ax + wk * BLOCK_Bx + bk * BLOCK_Cx + wa
+
 
 def kaak_pctoindex(c):
     N_WHITE = 3
@@ -1073,6 +1111,7 @@ def kaak_pctoindex(c):
         return NOINDEX
 
     return ki * BLOCK_Ax + ai
+
 
 def kakb_pctoindex(c):
     BLOCK_Ax = 64 * 64
@@ -1108,6 +1147,7 @@ def kakb_pctoindex(c):
 
     return ki * BLOCK_Ax + ws[1] * BLOCK_Bx + bs[1]
 
+
 def kpk_pctoindex(c):
     BLOCK_A = 64 * 64
     BLOCK_B = 64
@@ -1126,11 +1166,12 @@ def kpk_pctoindex(c):
 
     sq = pawn
     sq ^= 56  # flip_ns
-    sq -= 8   # down one row
+    sq -= 8  # down one row
     pslice = ((sq + (sq & 3)) >> 1)
 
     res = pslice * BLOCK_A + wk * BLOCK_B + bk
     return res
+
 
 def kpppk_pctoindex(c):
     BLOCK_A = 64 * 64
@@ -1344,11 +1385,13 @@ def sortlists(ws, wp):
     wp2, ws2 = zip(*z)
     return list(ws2), list(wp2)
 
+
 def egtb_block_unpack(side, n, bp):
     try:
         return [dtm_unpack(side, i) for i in bp[:n]]
     except TypeError:
         return [dtm_unpack(side, ord(i)) for i in bp[:n]]
+
 
 def split_index(i):
     return divmod(i, ENTRIES_PER_BLOCK)
@@ -1373,8 +1416,10 @@ def removepiece(ys, yp, j):
     del ys[j]
     del yp[j]
 
+
 def opp(side):
     return 1 if side == 0 else 0
+
 
 def adjust_up(dist):
     udist = dist
@@ -1384,6 +1429,7 @@ def adjust_up(dist):
         udist += (1 << PLYSHIFT)
 
     return udist
+
 
 def bestx(side, a, b):
     # 0 = selectfirst
@@ -1414,8 +1460,10 @@ def bestx(side, a, b):
     key = comparison[a & 3][b & 3] ^ xorkey[side]
     return retu[key]
 
+
 def unpackdist(d):
     return d >> PLYSHIFT, d & INFOMASK
+
 
 def dtm_unpack(stm, packed):
     p = packed
@@ -1582,7 +1630,8 @@ class PythonTablebases(object):
 
         # Only up to 5-men tablebases.
         if len(white_squares) + len(black_squares) > 5:
-            raise KeyError("gaviota tables support up to 5 pieces, not {0}: {1}".format(chess.popcount(board.occupied), board.fen()))
+            raise KeyError("gaviota tables support up to 5 pieces, not {0}: {1}".format(chess.popcount(board.occupied),
+                                                                                        board.fen()))
 
         # Probe.
         dtm = self.egtb_get_dtm(req)
@@ -1684,7 +1733,8 @@ class PythonTablebases(object):
             if req.epsq != NOSQUARE:
                 req.epsq = flip_ns(req.epsq)
         else:
-            raise MissingTableError("no gaviota table available for: {0}v{1}".format(white_letters.upper(), black_letters.upper()))
+            raise MissingTableError(
+                "no gaviota table available for: {0}v{1}".format(white_letters.upper(), black_letters.upper()))
 
         return self._open_tablebase(req)
 
@@ -1992,7 +2042,8 @@ class NativeTablebases(object):
             raise KeyError("gaviota tables do not contain positions with castling rights: {0}".format(board.fen()))
 
         if chess.popcount(board.occupied) > 5:
-            raise KeyError("gaviota tables support up to 5 pieces, not {0}: {1}".format(chess.popcount(board.occupied), board.fen()))
+            raise KeyError("gaviota tables support up to 5 pieces, not {0}: {1}".format(chess.popcount(board.occupied),
+                                                                                        board.fen()))
 
         stm = ctypes.c_uint(0 if board.turn == chess.WHITE else 1)
         ep_square = ctypes.c_uint(board.ep_square if board.ep_square else 64)
@@ -2024,7 +2075,8 @@ class NativeTablebases(object):
         info = ctypes.c_uint()
         pliestomate = ctypes.c_uint()
         if not wdl_only:
-            ret = self.libgtb.tb_probe_hard(stm, ep_square, castling, c_ws, c_bs, c_wp, c_bp, ctypes.byref(info), ctypes.byref(pliestomate))
+            ret = self.libgtb.tb_probe_hard(stm, ep_square, castling, c_ws, c_bs, c_wp, c_bp, ctypes.byref(info),
+                                            ctypes.byref(pliestomate))
             dtm = int(pliestomate.value)
         else:
             ret = self.libgtb.tb_probe_WDL_hard(stm, ep_square, castling, c_ws, c_bs, c_wp, c_bp, ctypes.byref(info))

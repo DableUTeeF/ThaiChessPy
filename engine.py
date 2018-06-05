@@ -118,7 +118,8 @@ class MockProcess(object):
         self._is_dead.wait()
         return 0
 
-    def pid(self):
+    @staticmethod
+    def pid():
         return None
 
     def __repr__(self):
