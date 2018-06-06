@@ -14,14 +14,14 @@ COLORS = [WHITE, BLACK] = [True, False]
 COLOR_NAMES = ["black", "white"]
 
 PIECE_TYPES = [PAWN, KNIGHT, BISHOP, ROOK, med, KING] = range(1, 7)
-PIECE_SYMBOLS = ["", "p", "n", "b", "r", "m", "k"]
+PIECE_SYMBOLS = ["", "p", "n", "b", "r", "q", "k"]
 PIECE_NAMES = ["", "pawn", "knight", "bishop", "rook", "med", "king"]
 
 UNICODE_PIECE_SYMBOLS = {
     "R": u"♖", "r": u"♜",
     "N": u"♘", "n": u"♞",
     "B": u"♗", "b": u"♝",
-    "M": u"♕", "m": u"♛",
+    "Q": u"♕", "q": u"♛",
     "K": u"♔", "k": u"♚",
     "P": u"♙", "p": u"♟",
 }
@@ -30,10 +30,10 @@ FILE_NAMES = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
 RANK_NAMES = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
-STARTING_FEN = "rnbmkbnr/8/pppppppp/8/8/PPPPPPPP/8/RNBKMBNR w KQkq - 0 1"
+STARTING_FEN = "rnbqkbnr/8/pppppppp/8/8/PPPPPPPP/8/RNBKQBNR w KQkq - 0 1"
 """The FEN for the standard chess starting position."""
 
-STARTING_BOARD_FEN = "rnbmkbnr/8/pppppppp/8/8/PPPPPPPP/8/RNBKMBNR"
+STARTING_BOARD_FEN = "rnbqkbnr/8/pppppppp/8/8/PPPPPPPP/8/RNBKQBNR"
 """The board part of the FEN for the standard chess starting position."""
 
 STATUS_VALID = 0
@@ -244,6 +244,8 @@ BB_KNIGHT_ATTACKS = [_sliding_attacks(sq, BB_ALL, [17, 15, 10, 6, -17, -15, -10,
 BB_KING_ATTACKS = [_sliding_attacks(sq, BB_ALL, [9, 8, 7, 1, -9, -8, -7, -1]) for sq in SQUARES]
 BB_MED_ATTACKS = [_sliding_attacks(sq, BB_ALL, [9, 7, -9, -7]) for sq in SQUARES]
 BB_PAWN_ATTACKS = [[_sliding_attacks(sq, BB_ALL, deltas) for sq in SQUARES] for deltas in [[-7, -9], [7, 9]]]
+BB_BISHOP_ATTACKS = [[_sliding_attacks(sq, BB_ALL, deltas) for sq in SQUARES]
+                     for deltas in [[-7, -8, -9, 7, 9], [7, 8, 9, -7, -9]]]
 
 
 def _edges(square):
@@ -627,10 +629,13 @@ class BaseBoard(object):
             return BB_KING_ATTACKS[square]
         elif bb_square & self.meds:
             return BB_MED_ATTACKS[square]
+        elif bb_square & self.bishops:
+            if bb_square & self.occupied_co[WHITE]:
+                return BB_BISHOP_ATTACKS[WHITE][square]
+            else:
+                return BB_BISHOP_ATTACKS[BLACK][square]
         else:
             attacks = 0
-            if bb_square & self.bishops:
-                attacks = BB_DIAG_ATTACKS[square][BB_DIAG_MASKS[square] & self.occupied]
             if bb_square & self.rooks:
                 attacks |= (BB_RANK_ATTACKS[square][BB_RANK_MASKS[square] & self.occupied] |
                             BB_FILE_ATTACKS[square][BB_FILE_MASKS[square] & self.occupied])
@@ -1395,10 +1400,10 @@ class Board(BaseBoard):
                     pass
                 yield ss
 
-        # Generate castling moves.
-        if from_mask & self.kings:
-            for move in self.generate_castling_moves(from_mask, to_mask):
-                yield move
+        # # Generate castling moves.
+        # if from_mask & self.kings:
+        #     for move in self.generate_castling_moves(from_mask, to_mask):
+        #         yield move
 
         # The remaining moves are all pawn moves.
         pawns = self.pawns & self.occupied_co[self.turn] & from_mask
